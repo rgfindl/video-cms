@@ -1,0 +1,25 @@
+{
+  "mappings": {
+    "doc": {
+      "dynamic": "false",
+      "_routing": {
+        "required": true
+      },
+      "properties": {
+        "team_id": { "type": "keyword" },
+        "type": { "type": "keyword" },
+        "title": { "type": "text", "boost": 2 },
+        "content": { "type": "text" },
+        "tags": { "type": "keyword" },
+        "dateAdded": { "type": "date", "format": "epoch_millis" },
+        "dateModified": { "type": "date", "format": "epoch_millis" },
+        "editors": {
+          "properties": {
+            "userId": { "type": "keyword", "index": false },
+            "dateModified": { "type": "date", "format": "epoch_millis" , "index": false }
+          }
+        }
+      }
+    }
+  }
+}

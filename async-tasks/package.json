@@ -1,0 +1,60 @@
+{
+  "name": "video-cms-tasks",
+  "version": "1.0.0",
+  "description": "Video CMS - Tasks",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest --watch"
+  },
+  "dependencies": {
+    "lodash": "^4.17.10"
+  },
+  "devDependencies": {
+    "aws-sdk": "^2.239.1",
+    "eslint": "^4.19.1",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-plugin-import": "^2.11.0",
+    "jest": "^23.6.0"
+  },
+  "eslintConfig": {
+    "extends": "airbnb-base",
+    "env": {
+      "es6": true,
+      "browser": true
+    },
+    "rules": {
+      "camelcase": [
+        "warn"
+      ],
+      "max-len": [
+        "warn"
+      ],
+      "no-underscore-dangle": [
+        "warn"
+      ],
+      "no-console": [
+        "off"
+      ],
+      "brace-style": [
+        "error",
+        "stroustrup"
+      ],
+      "comma-dangle": [
+        "error",
+        "never"
+      ],
+      "no-unused-vars": [
+        "warn"
+      ],
+      "no-var": [
+        "off"
+      ],
+      "one-var": [
+        "off"
+      ],
+      "import/no-extraneous-dependencies": [
+        "off"
+      ]
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "Records": [
+      {
+          "messageId": "089144da-a86e-4014-be0d-4a4c402c8e3d",
+          "receiptHandle": "AQEBT8bq8UmNddIAY3D9dlMe45YBssNgZJOXd47a3gncrCXxZZz2NS1EQUZ/v1O2ANkMLjpAWxPa5Aj/PuFjWWKtFFheiKDw80JkpYeDnUyTmArC5WVq6hZSVIIwr6lJ/Uo82uuzxPgZV0bk1bjQAwIAa6qIIu2TJ4iNZRrHIcr6rG00xspxQpN3HnDzFxg10w9avGyvM6u7Uqv6quBa/hxJSpPAhbmZQCh0fa9hylUCQWpKRB3ueq5Z78QBQdNG8xwJKGvfuAt2ciLlq/Dm9GxACy1GiYtU47FlEhMJxO2QIFBuw/f4q5wI2/HFRIwltdKeBMYnQTBptIjbzVD6o42GjLfbBjrwX0Voo91+GSbJGVrMnp6ben0+9KLi+hEpshbh9Z9Gg/TM+mpoafuDOc+mtj2ZTRrnoX3JDP4OYhlTIkU=",
+          "body": "{\"action\":\"encode\",\"video_id\":\"b7e374cb-d77c-4403-d091-dee2ea8bb503\",\"url\":\"https://d1hwbzaodu4avx.cloudfront.net/2d618ff5-48cf-83cc-222f-b36170c680d8/10-26-2018-t_97a8f4a460eb421eb0f41dfed5a8285b_name_t_adbef13e41744de4b31878e4d60ce770_name_20180716_QA_Video_1.mp4\"}",
+          "attributes": {
+              "ApproximateReceiveCount": "1",
+              "SentTimestamp": "1544537755311",
+              "SenderId": "AIDAJRFGL4LQQHVLE2UIY",
+              "ApproximateFirstReceiveTimestamp": "1544537755323"
+          },
+          "messageAttributes": {},
+          "md5OfBody": "1248c667d135aa8cc9b84818a7f7e247",
+          "eventSource": "aws:sqs",
+          "eventSourceARN": "arn:aws:sqs:us-east-1:813715622461:heyblue-queue-TasksQueue-RJ1RSLN3K837",
+          "awsRegion": "us-east-1"
+      }
+  ]
+}

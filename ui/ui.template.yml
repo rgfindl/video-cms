@@ -1,0 +1,160 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Static Web UI
+
+#
+# CloudFormation input parameters
+#
+Parameters:
+  TLD:
+    Type: String
+    Description: TLD name needed by Route53 to perform DNS (example.com)
+    Default: 'heyblue.io'
+  Domain:
+    Type: String
+    Description: Domain name for your website (example.com)
+    Default: 'heyblue.io'
+  RedirectWWW:
+    Type: String
+    Description: Redirect to Domain (www.example.com redirects to example.com)
+    Default: 'true'
+  SSLArn:
+    Type: String
+    Description: 'Wildcard SSL ARN'
+    Default: 'arn:aws:acm:us-east-1:813715622461:certificate/74dd21e7-9e93-44c5-b433-79f42f644558'
+
+Conditions:
+  NeedsRedirect: !Equals [!Ref RedirectWWW, 'true']
+  IsHTTPS: !Not [!Equals [!Ref SSLArn, '']]
+
+
+#
+# CloudFormation resources
+#
+Resources:
+
+  #
+  # Website buckets
+  #
+  WebsiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref Domain
+      AccessControl: PublicRead
+      WebsiteConfiguration:
+        IndexDocument: 'index.html'
+        ErrorDocument: 'index.html'
+
+  WebsiteBucketPolicy: 
+    Type: AWS::S3::BucketPolicy
+    Properties: 
+      Bucket: !Ref WebsiteBucket
+      PolicyDocument: 
+        Statement: 
+          - 
+            Action: 
+              - "s3:GetObject"
+            Effect: "Allow"
+            Resource: 
+              Fn::Join: 
+                - ""
+                - 
+                  - "arn:aws:s3:::"
+                  - !Ref WebsiteBucket
+                  - "/*"
+            Principal: "*"
+            Condition: 
+              StringLike: 
+                aws:Referer: 
+                  - !Sub "https://www.${Domain}/*"
+                  - !Sub "https://${Domain}/*"
+
+  RedirectBucket:
+    Type: AWS::S3::Bucket
+    Condition: NeedsRedirect
+    Properties:
+      BucketName: !Sub 'www.${Domain}'
+      AccessControl: BucketOwnerFullControl
+      WebsiteConfiguration:
+        RedirectAllRequestsTo:
+          HostName: !Ref Domain
+
+  #
+  # CloudFront CDN
+  #
+  CDN:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Aliases:
+          - !Ref Domain
+        Enabled: true
+        PriceClass: 'PriceClass_All'
+        DefaultCacheBehavior:
+          TargetOriginId: !Ref WebsiteBucket
+          ViewerProtocolPolicy: !If [IsHTTPS, "redirect-to-https", "allow-all"]
+          MinTTL: 0
+          AllowedMethods:
+            - 'HEAD'
+            - 'GET'
+          CachedMethods:
+            - 'HEAD'
+            - 'GET'
+          ForwardedValues:
+            QueryString: false
+            Cookies:
+              Forward: none
+        Origins:
+          -
+            Id: !Ref WebsiteBucket
+            DomainName: !Sub '${Domain}.s3-website-${AWS::Region}.amazonaws.com'
+            CustomOriginConfig:
+              HTTPPort: 80
+              HTTPSPort: 443
+              OriginProtocolPolicy: 'http-only'
+        Restrictions:
+          GeoRestriction:
+            RestrictionType: 'none'
+        ViewerCertificate:
+          SslSupportMethod: !If [IsHTTPS, "sni-only", !Ref "AWS::NoValue"]
+          MinimumProtocolVersion: !If [IsHTTPS, "TLSv1", !Ref "AWS::NoValue"]
+          AcmCertificateArn: !If [IsHTTPS, !Ref SSLArn, !Ref "AWS::NoValue"]
+          CloudFrontDefaultCertificate: !If [IsHTTPS, !Ref "AWS::NoValue", true]
+
+  #
+  # Route53 DNS record set to map our domain to our CDN
+  #
+  DomainDNS:
+    Type: AWS::Route53::RecordSetGroup
+    Properties:
+      HostedZoneName: !Sub '${TLD}.'
+      RecordSets:
+        -
+          Name: !Ref Domain
+          Type: 'A'
+          AliasTarget:
+            HostedZoneId: 'Z2FDTNDATAQYW2' # http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-route53-aliastarget.html#cfn-route53-aliastarget-hostedzoneid
+            DNSName: !GetAtt CDN.DomainName
+
+  #
+  # Route53 DNS record set to map our redirect to our domain (www.example.com -> example.com)
+  #
+  RedirectDNS:
+    Type: AWS::Route53::RecordSet
+    Condition: NeedsRedirect
+    Properties:
+      HostedZoneName: !Sub '${TLD}.'
+      Name: !Sub 'www.${Domain}'
+      Type: 'CNAME'
+      TTL: 900
+      ResourceRecords:
+        - !Sub 'www.${Domain}.s3-website-${AWS::Region}.amazonaws.com'
+
+#
+# Outputs to be used by other CloudFormation templates if needed.
+#
+Outputs:
+  WebsiteBucket:
+    Description: S3 Bucket
+    Value: !Ref WebsiteBucket
+    Export:
+      Name: !Sub '${AWS::StackName}-WebsiteBucket'

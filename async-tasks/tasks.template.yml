@@ -1,0 +1,70 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: Serverless Tasks
+
+Parameters:
+  IamStack:
+    Type: String
+    Description: The IAM stack name
+    Default: 'heyblue-iam'
+  DBStack:
+    Type: String
+    Description: The DB stack name
+    Default: 'heyblue-db'
+  AssetsStack:
+    Type: String
+    Description: The Assets stack name
+    Default: 'heyblue-assets'
+  QueueStack:
+    Type: String
+    Description: The Queue stack name
+    Default: 'heyblue-queue'
+
+Resources:
+
+  #
+  # Our Lambda function.  Basic code has been added.  You will replace the code later via your Github repo.
+  #
+  LambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Timeout: 30
+      Role:
+        Fn::ImportValue:
+          !Sub "${IamStack}-IamRoleLambdaExecutionArn"
+      CodeUri: ./
+      Runtime: nodejs8.10
+      Environment:
+        Variables:
+          TasksQueue:
+            Fn::ImportValue:
+              !Sub "${QueueStack}-TasksQueue"
+          Table:
+            Fn::ImportValue:
+              !Sub "${DBStack}-Table"
+          AssetsBucket:
+            Fn::ImportValue:
+              !Sub "${AssetsStack}-AssetsBucket"
+          AssetsCloudFront:
+            Fn::ImportValue:
+              !Sub "${AssetsStack}-AssetsCloudFront"
+          MediaConvertRole: 
+            Fn::ImportValue:
+              !Sub "${IamStack}-IamRoleMediaConvertArn"
+      ReservedConcurrentExecutions: 5
+      Events:
+        SqsEvent:
+          Type: SQS
+          Properties:
+            Queue:
+              Fn::ImportValue:
+                !Sub "${QueueStack}-TasksQueueArn"
+            BatchSize: 1
+
+Outputs:
+  LambdaFunction:
+    Description: Lambda Function
+    Value: !Ref LambdaFunction
+    Export:
+      Name: !Sub '${AWS::StackName}-LambdaFunction'

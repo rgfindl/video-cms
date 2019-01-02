@@ -1,0 +1,65 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Serverless Tasks
+Outputs:
+  LambdaFunction:
+    Description: Lambda Function
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-LambdaFunction
+    Value:
+      Ref: LambdaFunction
+Parameters:
+  AssetsStack:
+    Default: heyblue-assets
+    Description: The Assets stack name
+    Type: String
+  DBStack:
+    Default: heyblue-db
+    Description: The DB stack name
+    Type: String
+  IamStack:
+    Default: heyblue-iam
+    Description: The IAM stack name
+    Type: String
+  QueueStack:
+    Default: heyblue-queue
+    Description: The Queue stack name
+    Type: String
+Resources:
+  LambdaFunction:
+    Properties:
+      CodeUri: s3://heyblue-stack-artifacts/490604b986df149300607edcaa674cff
+      Environment:
+        Variables:
+          AssetsBucket:
+            Fn::ImportValue:
+              Fn::Sub: ${AssetsStack}-AssetsBucket
+          AssetsCloudFront:
+            Fn::ImportValue:
+              Fn::Sub: ${AssetsStack}-AssetsCloudFront
+          MediaConvertRole:
+            Fn::ImportValue:
+              Fn::Sub: ${IamStack}-IamRoleMediaConvertArn
+          Table:
+            Fn::ImportValue:
+              Fn::Sub: ${DBStack}-Table
+          TasksQueue:
+            Fn::ImportValue:
+              Fn::Sub: ${QueueStack}-TasksQueue
+      Events:
+        SqsEvent:
+          Properties:
+            BatchSize: 1
+            Queue:
+              Fn::ImportValue:
+                Fn::Sub: ${QueueStack}-TasksQueueArn
+          Type: SQS
+      Handler: index.handler
+      ReservedConcurrentExecutions: 5
+      Role:
+        Fn::ImportValue:
+          Fn::Sub: ${IamStack}-IamRoleLambdaExecutionArn
+      Runtime: nodejs8.10
+      Timeout: 30
+    Type: AWS::Serverless::Function
+Transform: AWS::Serverless-2016-10-31

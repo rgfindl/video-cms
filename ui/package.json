@@ -1,0 +1,43 @@
+{
+  "name": "ui",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@material-ui/core": "^3.6.2",
+    "@material-ui/icons": "^3.0.1",
+    "@uppy/aws-s3-multipart": "^0.28.0",
+    "@uppy/core": "^0.28.0",
+    "@uppy/file-input": "^0.29.0",
+    "@uppy/progress-bar": "^0.29.0",
+    "@uppy/react": "^0.28.0",
+    "axios": "^0.18.0",
+    "qs": "^6.6.0",
+    "react": "^16.6.3",
+    "react-dom": "^16.6.3",
+    "react-google-login": "^4.0.0",
+    "react-player": "^1.7.1",
+    "react-router-dom": "^4.3.1",
+    "react-scripts": "2.1.1"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "serve": "serve -s build",
+    "deploy": "npm run build && aws s3 sync build/ s3://heyblue.io --acl public-read --profile=heyblue --delete --cache-control max-age=1",
+    "stack-up": "sh ./stack-up.sh ui"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ],
+  "devDependencies": {
+    "serve": "^10.1.1"
+  }
+}

@@ -1,0 +1,11 @@
+{
+ "LambdaFunction": {
+   "TasksQueue": "https://sqs.us-east-1.amazonaws.com/813715622461/heyblue-queue-TasksQueue-RJ1RSLN3K837",
+   "ElasticsearchDomain": "search-heyblue-skrtstfwt473djjjaxsuuwzyxa.us-east-1.es.amazonaws.com",
+   "ElasticsearchIndex": "sharedv1",
+   "Table": "heyblue-db-Table-1TA6IOEQPV4ZG",
+   "AssetsBucket": "heyblue-assets-assetsbucket-16seezun0g9i0",
+   "AssetsCloudFront": "d1hwbzaodu4avx.cloudfront.net",
+   "GapiClientId": "717382266266-6giki9fml3e1hnnfpcs7egmu5gs98b6j.apps.googleusercontent.com"
+ }
+}

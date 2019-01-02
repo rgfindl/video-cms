@@ -1,0 +1,48 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Data Sync
+Outputs:
+  LambdaFunction:
+    Description: Lambda Function
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-LambdaFunction
+    Value:
+      Ref: LambdaFunction
+Parameters:
+  DBStack:
+    Default: heyblue-db
+    Description: The DB stack name
+    Type: String
+  IamStack:
+    Default: heyblue-iam
+    Description: The IAM stack name
+    Type: String
+Resources:
+  LambdaFunction:
+    Properties:
+      CodeUri: s3://heyblue-stack-artifacts/386a02e9f47a59ab1ad6cb20039462c4
+      Environment:
+        Variables:
+          ES_ENDPOINT:
+            Fn::ImportValue:
+              Fn::Sub: ${DBStack}-ElasticsearchDomain
+          INDEX: sharedv1
+          TYPE: doc
+      Events:
+        DynamoDBEvent:
+          Properties:
+            BatchSize: 10
+            StartingPosition: TRIM_HORIZON
+            Stream:
+              Fn::ImportValue:
+                Fn::Sub: ${DBStack}-TableStreamArn
+          Type: DynamoDB
+      Handler: index.handler
+      ReservedConcurrentExecutions: 5
+      Role:
+        Fn::ImportValue:
+          Fn::Sub: ${IamStack}-IamRoleLambdaExecutionArn
+      Runtime: nodejs8.10
+      Timeout: 30
+    Type: AWS::Serverless::Function
+Transform: AWS::Serverless-2016-10-31

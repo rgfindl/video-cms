@@ -1,0 +1,1 @@
+sam local start-api --port=3002 --env-vars sam-local-env.json --template api.template.yml

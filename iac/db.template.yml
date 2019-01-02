@@ -1,0 +1,88 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: DB Resources
+
+Parameters:
+  EsDomainName:
+    Type: String
+    Description: EsDomainName
+    Default: 'heyblue'
+  IamStack:
+    Type: String
+    Description: The IAM stack name
+    Default: 'heyblue-iam'
+
+Resources:
+
+  #
+  # Table
+  #
+  Table:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        -
+          AttributeName: 'hash_key'
+          AttributeType: 'S'
+        -
+          AttributeName: 'sort_key'
+          AttributeType: 'S'
+      KeySchema:
+        -
+          AttributeName: 'hash_key'
+          KeyType: 'HASH'
+        -
+          AttributeName: 'sort_key'
+          KeyType: 'RANGE'
+      ProvisionedThroughput:
+        ReadCapacityUnits: '5'
+        WriteCapacityUnits: '5'
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+
+  #
+  # ES
+  #
+  ElasticsearchDomain: 
+    Type: AWS::Elasticsearch::Domain
+    Properties:
+      DomainName: !Ref EsDomainName
+      ElasticsearchVersion: '6.2'
+      ElasticsearchClusterConfig: 
+        DedicatedMasterEnabled: "false"
+        InstanceCount: "1"
+        ZoneAwarenessEnabled: "false"
+        InstanceType: "t2.small.elasticsearch"
+      EBSOptions: 
+        EBSEnabled: true
+        Iops: 0
+        VolumeSize: 10
+        VolumeType: "gp2"
+      SnapshotOptions: 
+        AutomatedSnapshotStartHour: "0"
+      AccessPolicies: 
+        Version: "2012-10-17"
+        Statement: 
+          - 
+            Effect: "Allow"
+            Principal: 
+              AWS: 
+                - !Sub "arn:aws:iam::${AWS::AccountId}:user/randy.findley"
+                - Fn::ImportValue: !Sub "${IamStack}-IamRoleLambdaExecutionArn"
+            Action: "es:*"
+            Resource: !Sub "arn:aws:es:us-east-1:${AWS::AccountId}:domain/${EsDomainName}/*"
+      AdvancedOptions: 
+        rest.action.multi.allow_explicit_index: "true"
+
+Outputs:
+  Table:
+    Value: !Ref 'Table'
+    Export:
+      Name: !Sub '${AWS::StackName}-Table'
+  TableStreamArn:
+    Value: !GetAtt Table.StreamArn
+    Export:
+      Name: !Sub '${AWS::StackName}-TableStreamArn'
+  ElasticsearchDomain:
+    Value: !GetAtt 'ElasticsearchDomain.DomainEndpoint'
+    Export:
+      Name: !Sub '${AWS::StackName}-ElasticsearchDomain'

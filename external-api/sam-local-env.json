@@ -1,0 +1,8 @@
+{
+ "LambdaFunction": {
+   "ElasticsearchDomain": "search-heyblue-skrtstfwt473djjjaxsuuwzyxa.us-east-1.es.amazonaws.com",
+   "ElasticsearchIndex": "sharedv1",
+   "Table": "heyblue-db-Table-1TA6IOEQPV4ZG",
+   "AssetsBucket": "heyblue-assets-assetsbucket-16seezun0g9i0"
+ }
+}

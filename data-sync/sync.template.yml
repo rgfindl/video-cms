@@ -1,0 +1,53 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: Data Sync
+
+Parameters:
+  IamStack:
+    Type: String
+    Description: The IAM stack name
+    Default: 'heyblue-iam'
+  DBStack:
+    Type: String
+    Description: The DB stack name
+    Default: 'heyblue-db'
+
+Resources:
+
+  #
+  # Our Lambda function.  Basic code has been added.  You will replace the code later via your Github repo.
+  #
+  LambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Timeout: 30
+      Role:
+        Fn::ImportValue:
+          !Sub "${IamStack}-IamRoleLambdaExecutionArn"
+      CodeUri: ./
+      Runtime: nodejs8.10
+      Environment:
+        Variables:
+          ES_ENDPOINT:
+            Fn::ImportValue:
+              !Sub "${DBStack}-ElasticsearchDomain"
+          INDEX: 'sharedv1'
+          TYPE: 'doc'
+      ReservedConcurrentExecutions: 5
+      Events:
+        DynamoDBEvent:
+          Type: DynamoDB
+          Properties:
+            Stream: 
+              Fn::ImportValue:
+                !Sub "${DBStack}-TableStreamArn"
+            StartingPosition: TRIM_HORIZON
+            BatchSize: 10
+
+Outputs:
+  LambdaFunction:
+    Description: Lambda Function
+    Value: !Ref LambdaFunction
+    Export:
+      Name: !Sub '${AWS::StackName}-LambdaFunction'

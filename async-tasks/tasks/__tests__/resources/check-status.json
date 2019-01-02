@@ -1,0 +1,20 @@
+{
+  "Records": [
+      {
+          "messageId": "e32b2f11-8fba-4ead-a3cb-0af061eaa7f9",
+          "receiptHandle": "AQEB2mofcT253upPnbLz45Ouk8h+s917ecP3/59D7GzcZrJasH2VNQbb+OvRDR9KZP7UyBbnDLH1VqN0f0qu3qzqPsZ5snJKryo9UgNmJMYf7Hdyf3E7SjHfGy9zTTh8rQ4p6MEfDRcP+gFi/hTXJ+0fRx1/Drtj141KTz/ppfVD1Jg9/Rt9XjNSn058WAoZt1IDybeZvCp35SCYHrtb6Mz8EgvuCl0ZOXU0rrV6g6Wy7k39rpcjVPiL1DqqaPOPFdPZvLBUj+WkiZBByDWLrpR2NvWNR1qpRyw/9EOpxabt5MZZROYKR5aNqzkUMowUQHs+1fTjuYm5xMmZKvif4ZBAIe8ceOqRl5z4cVlPaBSxg2LhQmbuzAdQkdP+8xxOPhCtO60Za15/FfgGFC2Dah5gmnmyURWHNs2q/JLHGT+H5DI=",
+          "body": "{\"action\":\"check-status\",\"video_id\":\"4c3c9f48-4b04-5534-cd00-2da4ca35426b\", \"mediaconvert_job_id\":\"1544634666378-f9bdxx\"}",
+          "attributes": {
+              "ApproximateReceiveCount": "1",
+              "SentTimestamp": "1544519722197",
+              "SenderId": "AIDAJRFGL4LQQHVLE2UIY",
+              "ApproximateFirstReceiveTimestamp": "1544520477955"
+          },
+          "messageAttributes": {},
+          "md5OfBody": "6ebeaf03aa8ad461e570c696f82d9fe0",
+          "eventSource": "aws:sqs",
+          "eventSourceARN": "arn:aws:sqs:us-east-1:813715622461:heyblue-queue-TasksQueue-RJ1RSLN3K837",
+          "awsRegion": "us-east-1"
+      }
+  ]
+}

@@ -1,0 +1,74 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: IAM Resources
+
+Resources:
+
+  #
+  # Role that our Lambda will assume to provide access to other AWS resources
+  #
+  IamRoleLambdaExecution:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: '/'
+
+  #
+  # Create a Policy and attach it to our Lambda Role.
+  #
+  IamPolicyLambdaExecution:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: IamPolicyLambdaExecution
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action: '*'
+          Resource: '*'
+      Roles:
+      - Ref: IamRoleLambdaExecution
+
+  #
+  # Role for MediaConvert
+  #
+  IamRoleMediaConvert:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - mediaconvert.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: '/'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/AmazonS3FullAccess'
+        - 'arn:aws:iam::aws:policy/AmazonAPIGatewayInvokeFullAccess'
+
+Outputs:
+  IamRoleLambdaExecution:
+    Description: IamRoleLambdaExecution
+    Value: !Ref IamRoleLambdaExecution
+    Export:
+      Name: !Sub '${AWS::StackName}-IamRoleLambdaExecution'
+  IamRoleLambdaExecutionArn:
+    Description: IamRoleLambdaExecutionArn
+    Value: !GetAtt IamRoleLambdaExecution.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-IamRoleLambdaExecutionArn'
+  IamRoleMediaConvertArn:
+    Description: IamRoleMediaConvert
+    Value: !GetAtt IamRoleMediaConvert.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-IamRoleMediaConvertArn'

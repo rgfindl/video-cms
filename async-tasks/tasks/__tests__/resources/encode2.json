@@ -1,0 +1,20 @@
+{
+  "Records": [
+      {
+          "messageId": "a7806c37-946d-402e-a0c1-1c8b045f3687",
+          "receiptHandle": "AQEB7SqZgsKyUtX78DmBDZc+TS3QUB8nrH9TYs1c7vRunqISLoDA9hF4rpOe6ovARRvsncaz6Ab/BkrFXebZqOpvudjTDj43YELz7zvFUf4vm6PwIteW4IM1ru4eUGAHeXhjp8xaaMLSpYKEV3YYlBCiOJdv2OISHMsJKfywvk5mj9ts5dq30PHpqUiX30RBbNm/bnsGev/5RQkKWj9vVWryQdDakfefteP4o76ci88HhtQRi8rM21c7NaNy7Inf6pOzAf3LAbe8c78Vw10Epmo5HQJK+Db4JTFbIEFFlwRuteiP5vz9XgT18QArI60y9yO3fuVs0r/hBknMC8AJF3dOh0EDrC0WZ5wY/PfSypKli1u36pHiyYedfaagURpne9dgGGISmDAVoHJE4m10YP4ZrEUcD+1q/zj1L1hBk05ZoXs=",
+          "body": "{\"action\":\"encode\",\"video_id\":\"b7e374cb-d77c-4403-d091-dee2ea8bb503\",\"url\":\"https://d1hwbzaodu4avx.cloudfront.net/e25f2bb3-8250-5335-84d6-fe7bc8b5c46d/10-26-2018-t_97a8f4a460eb421eb0f41dfed5a8285b_name_t_adbef13e41744de4b31878e4d60ce770_name_20180716_QA_Video_1.mp4\",\"old_url\":\"https://d1hwbzaodu4avx.cloudfront.net/f25f2bb3-8250-5335-84d6-fe7bc8b5c46d/10-26-2018-t_97a8f4a460eb421eb0f41dfed5a8285b_name_t_adbef13e41744de4b31878e4d60ce770_name_20180716_QA_Video_1.mp4\"}",
+          "attributes": {
+              "ApproximateReceiveCount": "1",
+              "SentTimestamp": "1544539056816",
+              "SenderId": "AIDAJRFGL4LQQHVLE2UIY",
+              "ApproximateFirstReceiveTimestamp": "1544539056829"
+          },
+          "messageAttributes": {},
+          "md5OfBody": "b2dc623b45a5cb4d13458de13477a287",
+          "eventSource": "aws:sqs",
+          "eventSourceARN": "arn:aws:sqs:us-east-1:813715622461:heyblue-queue-TasksQueue-RJ1RSLN3K837",
+          "awsRegion": "us-east-1"
+      }
+  ]
+}

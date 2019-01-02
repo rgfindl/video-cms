@@ -1,0 +1,22 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Queue Resources
+
+Resources:
+
+  #
+  # Task Queue
+  #
+  TasksQueue:
+      Type: AWS::SQS::Queue
+
+Outputs:
+  TasksQueue:
+    Description: SQS Tasks Queue
+    Value: !Ref TasksQueue
+    Export:
+      Name: !Sub '${AWS::StackName}-TasksQueue'
+  TasksQueueArn:
+    Description: SQS Tasks Queue
+    Value: !GetAtt TasksQueue.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-TasksQueueArn'

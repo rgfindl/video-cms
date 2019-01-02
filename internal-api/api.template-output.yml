@@ -1,0 +1,232 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Conditions:
+  UseCustomDomain:
+    Fn::And:
+    - Fn::Not:
+      - Fn::Equals:
+        - Ref: TLD
+        - ''
+    - Fn::Not:
+      - Fn::Equals:
+        - Ref: Domain
+        - ''
+    - Fn::Not:
+      - Fn::Equals:
+        - Ref: SSLArn
+        - ''
+Description: Internal API
+Globals:
+  Api:
+    Cors:
+      AllowHeaders: '''*'''
+      AllowMethods: '''*'''
+      AllowOrigin: '''*'''
+Outputs:
+  ApiUrl:
+    Description: URL of your API endpoint
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-API
+    Value:
+      Fn::Sub: https://${ApiGatewayApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}
+  ApiUrlCustom:
+    Condition: UseCustomDomain
+    Description: URL of your API endpoint
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-API-Custom
+    Value:
+      Fn::Sub: https://${Domain}
+  LambdaFunction:
+    Description: Lambda Function
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-LambdaFunction
+    Value:
+      Ref: LambdaFunction
+Parameters:
+  AssetsStack:
+    Default: heyblue-assets
+    Description: The Assets stack name
+    Type: String
+  DBStack:
+    Default: heyblue-db
+    Description: The DB stack name
+    Type: String
+  Domain:
+    Default: api.heyblue.io
+    Description: Domain name for your api (api.example.com)
+    Type: String
+  ElasticsearchIndex:
+    Default: sharedv1
+    Type: String
+  Environment:
+    Default: prod
+    Description: Environment
+    Type: String
+  GapiClientId:
+    Default: 717382266266-6giki9fml3e1hnnfpcs7egmu5gs98b6j.apps.googleusercontent.com
+    Description: Google Sign-in API credentials
+    Type: String
+  GapiClientSecret:
+    Description: Google Sign-in API credentials
+    Type: String
+  IamStack:
+    Default: heyblue-iam
+    Description: The IAM stack name
+    Type: String
+  JwtSecret:
+    Description: JWT Secret
+    Type: String
+  QueueStack:
+    Default: heyblue-queue
+    Description: The Queue stack name
+    Type: String
+  SSLArn:
+    Default: arn:aws:acm:us-east-1:813715622461:certificate/74dd21e7-9e93-44c5-b433-79f42f644558
+    Description: Wildcard SSL ARN
+    Type: String
+  TLD:
+    Default: heyblue.io
+    Description: TLD name needed by Route53 to perform DNS (example.com)
+    Type: String
+Resources:
+  ApiDomainName:
+    Condition: UseCustomDomain
+    Properties:
+      CertificateArn:
+        Ref: SSLArn
+      DomainName:
+        Ref: Domain
+    Type: AWS::ApiGateway::DomainName
+  ApiGatewayApi:
+    Properties:
+      DefinitionBody:
+        basePath:
+          Fn::Sub: /${Environment}
+        definitions:
+          Empty:
+            title: Empty Schema
+            type: object
+        info:
+          title: HeyBlue.io API
+        paths:
+          /:
+            x-amazon-apigateway-any-method:
+              produces:
+              - application/json
+              responses:
+                '200':
+                  description: 200 response
+                  schema:
+                    $ref: '#/definitions/Empty'
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                passthroughBehavior: when_no_match
+                responses:
+                  default:
+                    statusCode: 200
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunction.Arn}/invocations
+          /{proxy+}:
+            x-amazon-apigateway-any-method:
+              parameters:
+              - in: path
+                name: proxy
+                required: true
+                type: string
+              produces:
+              - application/json
+              responses: {}
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunction.Arn}/invocations
+        schemes:
+        - https
+        swagger: 2.0
+      StageName:
+        Ref: Environment
+    Type: AWS::Serverless::Api
+  BasePathMapping:
+    Condition: UseCustomDomain
+    Properties:
+      DomainName:
+        Ref: ApiDomainName
+      RestApiId:
+        Ref: ApiGatewayApi
+      Stage:
+        Ref: Environment
+    Type: AWS::ApiGateway::BasePathMapping
+  DomainDNS:
+    Condition: UseCustomDomain
+    Properties:
+      HostedZoneName:
+        Fn::Join:
+        - ''
+        - - Ref: TLD
+          - .
+      RecordSets:
+      - AliasTarget:
+          DNSName:
+            Fn::GetAtt:
+            - ApiDomainName
+            - DistributionDomainName
+          HostedZoneId: Z2FDTNDATAQYW2
+        Name:
+          Ref: Domain
+        Type: A
+    Type: AWS::Route53::RecordSetGroup
+  LambdaFunction:
+    Properties:
+      CodeUri: s3://heyblue-stack-artifacts/d3b5978207580f0d21660fbd4c89bb8c
+      Environment:
+        Variables:
+          AssetsBucket:
+            Fn::ImportValue:
+              Fn::Sub: ${AssetsStack}-AssetsBucket
+          AssetsCloudFront:
+            Fn::ImportValue:
+              Fn::Sub: ${AssetsStack}-AssetsCloudFront
+          ElasticsearchDomain:
+            Fn::ImportValue:
+              Fn::Sub: ${DBStack}-ElasticsearchDomain
+          ElasticsearchIndex:
+            Ref: ElasticsearchIndex
+          GapiClientId:
+            Ref: GapiClientId
+          GapiClientSecret:
+            Ref: GapiClientSecret
+          JwtSecret:
+            Ref: JwtSecret
+          Table:
+            Fn::ImportValue:
+              Fn::Sub: ${DBStack}-Table
+          TasksQueue:
+            Fn::ImportValue:
+              Fn::Sub: ${QueueStack}-TasksQueue
+      Events:
+        ProxyApiGreedy:
+          Properties:
+            Method: ANY
+            Path: /{proxy+}
+            RestApiId:
+              Ref: ApiGatewayApi
+          Type: Api
+        ProxyApiRoot:
+          Properties:
+            Method: ANY
+            Path: /
+            RestApiId:
+              Ref: ApiGatewayApi
+          Type: Api
+      Handler: index.handler
+      Role:
+        Fn::ImportValue:
+          Fn::Sub: ${IamStack}-IamRoleLambdaExecutionArn
+      Runtime: nodejs8.10
+      Timeout: 5
+    Type: AWS::Serverless::Function
+Transform: AWS::Serverless-2016-10-31

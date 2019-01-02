@@ -1,0 +1,62 @@
+{
+  "name": "video-cms-api",
+  "version": "1.0.0",
+  "description": "Video CMS - Public API",
+  "main": "index.js",
+  "scripts": {
+    "start": "sh ./start-sam-local.sh",
+    "test": "mocha"
+  },
+  "dependencies": {
+    "lodash": "^4.17.10"
+  },
+  "devDependencies": {
+    "aws-sdk": "^2.239.1",
+    "eslint": "^4.19.1",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-plugin-import": "^2.11.0",
+    "mocha": "^3.5.0",
+    "proxyquire": "^2.0.1"
+  },
+  "eslintConfig": {
+    "extends": "airbnb-base",
+    "env": {
+      "es6": true,
+      "browser": true
+    },
+    "rules": {
+      "camelcase": [
+        "warn"
+      ],
+      "max-len": [
+        "warn"
+      ],
+      "no-underscore-dangle": [
+        "warn"
+      ],
+      "no-console": [
+        "off"
+      ],
+      "brace-style": [
+        "error",
+        "stroustrup"
+      ],
+      "comma-dangle": [
+        "error",
+        "never"
+      ],
+      "no-unused-vars": [
+        "warn"
+      ],
+      "no-var": [
+        "off"
+      ],
+      "one-var": [
+        "off"
+      ],
+      "import/no-extraneous-dependencies": [
+        "off"
+      ]
+    }
+  }
+}
