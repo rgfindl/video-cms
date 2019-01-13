@@ -6,6 +6,7 @@ import Paper from '@material-ui/core/Paper';
 import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
 import GoogleSignInButton from '../../Utils/GoogleSignInButton/GoogleSignInButton.js';
+import { connect } from 'react-redux';
 
 const styles = theme => ({
   root: {
@@ -64,4 +65,9 @@ Login.propTypes = {
   classes: PropTypes.object.isRequired,
 };
 
-export default withStyles(styles)(Login);
+const mapStateToProps = state => ({
+  currentUser: state.user.user
+});
+const mapDispatchToProps = dispatch => ({
+});
+export default connect(mapStateToProps, mapDispatchToProps)(withStyles(styles)(Login));

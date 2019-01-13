@@ -14,11 +14,13 @@ import AwsS3Multipart from '@uppy/aws-s3-multipart';
 import '@uppy/core/dist/style.css'
 import '@uppy/file-input/dist/style.css'
 import '@uppy/progress-bar/dist/style.css'
-import * as api from '../../lib/api';
+import * as api from '../../../lib/api';
 import AlertDialog from '../../Utils/AlertDialog/AlertDialog.js';
 import { withRouter, Redirect } from "react-router";
 import ReactPlayer from 'react-player'
-import _ from 'lodash';
+import { connect } from 'react-redux';
+import { showProgressAction, hideProgressAction, showAlertAction, hideAlertAction } from '../../../actions/displayActions';
+import * as videoActions from '../../../actions/videoActions';
 
 const styles = theme => ({
   root: {
@@ -70,31 +72,6 @@ const styles = theme => ({
 
 class Video extends React.Component {
   _isMounted = false;
-  constructor(props) {
-    super(props);
-    this.state = {
-      _inProgress: false,
-      _deleteProgress: false,
-      _saveProgress: false,
-      _saveComplete: false,
-      _deleteComplete: false,
-      _uploadProgress: false,
-      _error: false,
-      _alertOpen: false,
-      _deleteConfirmation: false,
-      _formErrors: {title: '', description: '', url: ''},
-      _titleValid: false,
-      _titleChanged: false,
-      _descriptionValid: false,
-      _descriptionChanged: false,
-      _urlValid: false,
-      _urlChanged: false,
-      _formValid: false,
-      title: "",
-      description: "",
-      url: ""
-    };
-  }
 
   initUppy = () => {
     const uppy = new Uppy({ debug: true, autoProceed: true });
@@ -114,7 +91,7 @@ class Video extends React.Component {
         console.log('createMultipartUpload');
         console.log(file);
         if (this._isMounted) {
-          this.setState({ _uploadProgress: true });
+          this.props.showUploadProgressAction();
         }
         const result = await api.createMultipartUpload(file);
         return result.body;
@@ -141,7 +118,7 @@ class Video extends React.Component {
         console.log(key);
         const result = await api.abortMultipartUpload(file, { uploadId, key });
         if (this._isMounted) {
-          this.setState({ _uploadProgress: false });
+          this.props.hideUploadProgressAction();
         }
         return result.body;
       },
@@ -154,10 +131,10 @@ class Video extends React.Component {
         const result = await api.completeMultipartUpload(file, { uploadId, key, parts });
         console.log(JSON.stringify(result, null, 3));
         if (this._isMounted) {
-          this.setState({
-            url: result.body.location,
-            _uploadProgress: false
+          this.props.updateVideoAction({
+            url: result.body.location
           });
+          this.props.hideUploadProgressAction();
           this.validateField('url', result.body.location);
         }
         return result.body;
@@ -173,68 +150,58 @@ class Video extends React.Component {
   updateVideo = async () => {
     let _saveComplete = false;
     try {
-      this.setState({
-        _saveProgress: true
-      });
+      this.props.showSaveProgressAction();
       let response = null;
-      if (!this.state.id) {
+      if (!this.props.videoForm.video.id) {
         console.log('save');
-        const video = _.omitBy(this.state, (value, key) => _.startsWith(key, '_'));
-        response = await api.saveVideo(video);
+        response = await api.saveVideo(this.props.videoForm.video);
         _saveComplete = true;
       } else {
         console.log('update');
-        const video = _.omitBy(this.state, (value, key) => _.startsWith(key, '_'));
-        response = await api.updateVideo(video);
+        response = await api.updateVideo(this.props.videoForm.video);
       }
       if (this._isMounted) {
         // Update state.
-        this.setState(_.assign({}, response.video, {
-          _saveProgress: false,
-          _saveComplete
-        }));
+        this.props.updateVideoAction(response.video);
+        this.props.saveCompleteAction(_saveComplete);
+        this.props.hideSaveProgressAction();
       }
       return;
     } catch (error) {
       if (this._isMounted) {
-        this.setState({
-          _saveProgress: false,
-          _error: error.message,
-          _alertOpen: true
-        });
+        this.props.hideSaveProgressAction();
+        this.props.showAlertAction(error.message);
       }
       return;
     }
   }
    
   onDialogClose = () => {
-    this.setState({_alertOpen: false});
+    this.props.hideAlertAction();
   }
 
   openDeleteConfirmation = () => {
-    this.setState({_deleteConfirmation: true});
+    this.props.deleteConfirmationAction(true);
   }
 
   closeDeleteConfirmation = () => {
-    this.setState({_deleteConfirmation: false});
+    this.props.deleteConfirmationAction(false);
   }
 
   deleteVideo = async () => {
     this.closeDeleteConfirmation();
     try {
-      this.setState({ _deleteProgress: true });
-      await api.deleteVideo(this.state.id);
+      this.props.showDeleteProgressAction();
+      await api.deleteVideo(this.props.videoForm.video.id);
       if (this._isMounted) {
-        this.setState({_deleteProgress: false, _deleteComplete: true });
+        this.props.deleteCompleteAction(true);
+        this.props.hideDeleteProgressAction();
       }
       return;
     } catch (error) {
       if (this._isMounted) {
-        this.setState({
-          _deleteProgress: false,
-          _error: error.message,
-          _alertOpen: true
-        });
+        this.props.hideDeleteProgressAction();
+        this.props.showAlertAction(error.message);
       }
       return;
     }
@@ -242,30 +209,25 @@ class Video extends React.Component {
 
   fetchVideo = async (id) => {
     try {
-      this.setState({ _inProgress: true });
+      this.props.showProgressAction();
       const response = await api.fetchVideo(id);
       if (this._isMounted) {
         if (response.video) {
-          this.setState(_.assign({}, response.video, {_inProgress: false }));
-          this.validateField('title', this.state.title);
-          this.validateField('description', this.state.description);
-          this.validateField('url', this.state.url);
+          this.props.updateVideoAction(response.video);
+          this.props.hideProgressAction();
+          this.validateField('title', this.props.videoForm.video.title);
+          this.validateField('description', this.props.videoForm.video.description);
+          this.validateField('url', this.props.videoForm.video.url);
         } else {
-          this.setState({
-            _inProgress: false,
-            _error: 'Video not found',
-            _alertOpen: true
-          });
+          this.props.hideProgressAction();
+          this.props.showAlertAction('Video not found');
         }
       }
       return;
     } catch (error) {
       if (this._isMounted) {
-        this.setState({
-          _inProgress: false,
-          _error: error.message,
-          _alertOpen: true
-        });
+        this.props.hideProgressAction();
+        this.props.showAlertAction(error.message);
       }
       return;
     }
@@ -274,6 +236,27 @@ class Video extends React.Component {
   componentDidMount = async () => {
     console.log('video did mount');
     this._isMounted = true;
+
+    this.props.hideProgressAction();
+    this.props.hideUploadProgressAction();
+    this.props.hideSaveProgressAction();
+    this.props.hideDeleteProgressAction();
+    this.props.saveCompleteAction(false);
+    this.props.deleteCompleteAction(false);
+    this.props.deleteConfirmationAction(false);
+    this.props.setFieldChangedAction('titleChanged', false);
+    this.props.setFieldChangedAction('descriptionChanged', false);
+    this.props.setFieldChangedAction('urlChanged', false);
+    this.props.setFieldValidAction('titleValid', false);
+    this.props.setFieldValidAction('descriptionValid', false);
+    this.props.setFieldValidAction('urlValid', false);
+    this.props.setFormErrorsAction({
+      title: '', 
+      description: '', 
+      url: ''
+    });
+    this.props.setFormValidAction(false);
+
     if (this.props.match.params.id) {
       await this.fetchVideo(this.props.match.params.id);
     }
@@ -289,45 +272,41 @@ class Video extends React.Component {
   handleUserInput = (e) => {
     const name = e.target.name;
     const value = e.target.value;
-    this.setState({[name]: value}, 
-      () => { this.validateField(name, value) });
+    this.props.setVideoInputAction(name, value);
+    this.validateField(name, value);
   }
 
   validateField = (fieldName, value) => {
-    let fieldValidationErrors = this.state._formErrors;
-    let titleValid = this.state._titleValid;
-    let descriptionValid = this.state._descriptionValid;
-    let urlValid = this.state._urlValid;
+    let fieldValidationErrors = this.props.videoForm.formErrors;
+    let titleValid = this.props.videoForm.titleValid;
+    let descriptionValid = this.props.videoForm.descriptionValid;
+    let urlValid = this.props.videoForm.urlValid;
   
     switch(fieldName) {
       case 'title':
         titleValid = value.length >= 1;
         fieldValidationErrors.title = titleValid ? '': 'title is required';
-        this.setState({_titleChanged: true});
+        this.props.setFieldChangedAction('titleChanged', true);
         break;
       case 'description':
         descriptionValid = value.length >= 1;
         fieldValidationErrors.description = descriptionValid ? '': 'description is required';
-        this.setState({_descriptionChanged: true});
+        this.props.setFieldChangedAction('descriptionChanged', true);
         break;
       case 'url':
         urlValid = value.length >= 1;
         fieldValidationErrors.url = urlValid ? '': 'url is required';
-        this.setState({_urlChanged: true});
+        this.props.setFieldChangedAction('urlChanged', true);
         break;
       default:
         break;
     }
-    this.setState({
-      _formErrors: fieldValidationErrors,
-      _titleValid: titleValid,
-      _descriptionValid: descriptionValid,
-      _urlValid: urlValid
-    }, this.validateForm);
-  }
-  
-  validateForm = () => {
-    this.setState({_formValid: this.state._titleValid && this.state._descriptionValid && this.state._urlValid});
+    this.props.setFormErrorsAction(fieldValidationErrors);
+    this.props.setFieldValidAction('titleValid', titleValid);
+    this.props.setFieldValidAction('descriptionValid', descriptionValid);
+    this.props.setFieldValidAction('urlValid', urlValid);
+    this.props.setFormValidAction(
+      this.props.videoForm.titleValid && this.props.videoForm.descriptionValid && this.props.videoForm.urlValid);
   }
 
   render() {
@@ -342,14 +321,14 @@ class Video extends React.Component {
                   <Typography variant="h3" gutterBottom={true} color="secondary">
                     Video
                   </Typography>
-                  {this.state._inProgress &&
+                  {this.props.display.inProgress &&
                     <CircularProgress className={classes.progress} size={25} />
                   }
-                  {!this.state._inProgress &&
+                  {!this.props.display.inProgress &&
                     <div>
-                      {this.state.status &&
+                      {this.props.videoForm.video.status &&
                         <Typography variant="body1" gutterBottom={true} color="secondary">
-                          Status: <span className={classes.status}>{this.state.status}</span>
+                          Status: <span className={classes.status}>{this.props.videoForm.video.status}</span>
                         </Typography>
                       }
                       <TextField
@@ -359,10 +338,10 @@ class Video extends React.Component {
                         name="title"
                         label="Title"
                         fullWidth
-                        value={this.state.title}
+                        value={this.props.videoForm.video.title}
                         onChange={this.handleUserInput}
-                        helperText={this.state._formErrors.title}
-                        error={this.state._titleChanged && !this.state._titleValid}
+                        helperText={this.props.videoForm.formErrors.title}
+                        error={this.props.videoForm.titleChanged && !this.props.videoForm.titleValid}
                       />
                       <TextField
                         margin="dense"
@@ -371,10 +350,10 @@ class Video extends React.Component {
                         label="Description"
                         fullWidth
                         multiline
-                        value={this.state.description}
+                        value={this.props.videoForm.video.description}
                         onChange={this.handleUserInput}
-                        helperText={this.state._formErrors.description}
-                        error={this.state._descriptionChanged && !this.state._descriptionValid}
+                        helperText={this.props.videoForm.formErrors.description}
+                        error={this.props.videoForm.descriptionChanged && !this.props.videoForm.descriptionValid}
                       />
                       <TextField
                         margin="dense"
@@ -382,19 +361,19 @@ class Video extends React.Component {
                         name="url"
                         label="Video URL"
                         fullWidth
-                        value={this.state.url}
+                        value={this.props.videoForm.video.url}
                         onChange={this.handleUserInput}
-                        helperText={this.state._formErrors.url}
-                        error={this.state._urlChanged && !this.state._urlValid}
+                        helperText={this.props.videoForm.formErrors.url}
+                        error={this.props.videoForm.urlChanged && !this.props.videoForm.urlValid}
                       />
                       <Grid item lg={12}>
-                        <div id="FileInput" className={this.state._uploadProgress || this.state._saveProgress || this.state._deleteProgress ? classes.uploadButtonDisabled : classes.uploadButton}></div>
-                        {this.state._uploadProgress &&
+                        <div id="FileInput" className={this.props.videoForm.uploadProgress || this.props.videoForm.saveProgress || this.props.videoForm.deleteProgress ? classes.uploadButtonDisabled : classes.uploadButton}></div>
+                        {this.props.videoForm.uploadProgress &&
                           <CircularProgress className={classes.uploadProgress} size={25} />
                         }
-                        {this.state.url &&
+                        {this.props.videoForm.video.url &&
                           <ReactPlayer 
-                            url={this.state.url} 
+                            url={this.props.videoForm.video.url} 
                             controls={true}
                             playing={false}
                             width='inherit'
@@ -408,13 +387,13 @@ class Video extends React.Component {
                       <Grid item lg={12}>
                         <div id="ProgressBar"></div>
                       </Grid>
-                      {this.state.streams &&
+                      {this.props.videoForm.video.streams &&
                         <div>
                           <Grid item lg={12} className={classes.streamGrid}>
                               <Typography variant='body1'>External API</Typography>
-                              <a href={`${process.env.REACT_APP_EXTERNAL_API_HOST}/videos?id=${this.state.id}`}>{`${process.env.REACT_APP_EXTERNAL_API_HOST}/videos?id=${this.state.id}`}</a>
+                              <a href={`${process.env.REACT_APP_EXTERNAL_API_HOST}/videos?id=${this.props.videoForm.video.id}`}>{`${process.env.REACT_APP_EXTERNAL_API_HOST}/videos?id=${this.props.videoForm.video.id}`}</a>
                           </Grid>
-                          {this.state.streams.map(stream => 
+                          {this.props.videoForm.video.streams.map(stream => 
                             <Grid item lg={12} key={stream.url} className={classes.streamGrid}>
                               <Typography>{stream.type} - {stream.width} x {stream.height}</Typography>
                               <a href={stream.url}>{stream.url}</a>
@@ -424,16 +403,16 @@ class Video extends React.Component {
                       }
                       <Grid container spacing={24}>
                         <Grid item className={classes.deleteButtonGrid} lg={6}>
-                          {!this.state._deleteProgress &&
-                            <Button onClick={this.openDeleteConfirmation} disabled={this.state._uploadProgress || this.state._saveProgress || !this.state.id} color="secondary" size="large" variant="contained" className={classes.deleteButton} >
+                          {!this.props.videoForm.deleteProgress &&
+                            <Button onClick={this.openDeleteConfirmation} disabled={this.props.videoForm.uploadProgress || this.props.videoForm.saveProgress || !this.props.videoForm.video.id} color="secondary" size="large" variant="contained" className={classes.deleteButton} >
                               Delete
                             </Button>
                           }
-                          {this.state._deleteProgress &&
+                          {this.props.videoForm.deleteProgress &&
                             <CircularProgress className={classes.progress} size={25} />
                           }
                           <AlertDialog
-                            open={this.state._deleteConfirmation} 
+                            open={this.props.videoForm.deleteConfirmation} 
                             title='Delete video?'
                             description='Are you sure you want to delete this video?'
                             handlePositive={this.deleteVideo}
@@ -442,7 +421,7 @@ class Video extends React.Component {
                             positiveButton='Delete'
                             negativeButton='Close'
                           />
-                          {this.state._deleteComplete &&
+                          {this.props.videoForm.deleteComplete &&
                             <Redirect
                                 to={{
                                   pathname: `/private/dashboard`
@@ -451,20 +430,20 @@ class Video extends React.Component {
                           }
                         </Grid>
                         <Grid item className={classes.saveButtonGrid} lg={6}>
-                          {!this.state._saveProgress &&
-                            <Button onClick={this.updateVideo} disabled={this.state._uploadProgress || this.state._deleteProgress || !this.state._formValid} color="primary" size="large" variant="contained" className={classes.saveButton} >
+                          {!this.props.videoForm.saveProgress &&
+                            <Button onClick={this.updateVideo} disabled={this.props.videoForm.uploadProgress || this.props.videoForm.deleteProgress || !this.props.videoForm.formValid} color="primary" size="large" variant="contained" className={classes.saveButton} >
                               Save
                             </Button>
                           }
-                          {this.state._saveProgress &&
+                          {this.props.videoForm.saveProgress &&
                             <CircularProgress className={classes.progress} size={25} />
                           }
                         </Grid>
                       </Grid>
-                      {this.state._saveComplete &&
+                      {this.props.videoForm.saveComplete &&
                         <Redirect
                             to={{
-                              pathname: `/private/videos/${this.state.id}`
+                              pathname: `/private/videos/${this.props.videoForm.video.id}`
                             }}
                           />
                       }
@@ -476,9 +455,9 @@ class Video extends React.Component {
           </Grid>
         </Grid>
         <AlertDialog
-          open={this.state._alertOpen} 
+          open={this.props.display.alertOpen} 
           title='Request failed'
-          description={this.state._error ? this.state._error : 'Login failed, please try again.'}
+          description={this.props.display.error ? this.props.display.error : 'Login failed, please try again.'}
           handlePositive={this.onDialogClose}
           handleClose={this.onDialogClose}
           positiveButton='Close'
@@ -492,4 +471,30 @@ Video.propTypes = {
   classes: PropTypes.object.isRequired
 };
 
-export default withStyles(styles)(withRouter(Video));
+const mapStateToProps = state => ({
+  currentUser: state.user.user,
+  display: state.display,
+  videoForm: state.videoForm
+});
+const mapDispatchToProps = dispatch => ({
+  showProgressAction: () => dispatch(showProgressAction()),
+  hideProgressAction: () => dispatch(hideProgressAction()),
+  showAlertAction: (error) => dispatch(showAlertAction(error)),
+  hideAlertAction: () => dispatch(hideAlertAction()),
+  showUploadProgressAction: () => dispatch(videoActions.showUploadProgressAction()),
+  hideUploadProgressAction: () => dispatch(videoActions.hideUploadProgressAction()),
+  showSaveProgressAction: () => dispatch(videoActions.showSaveProgressAction()),
+  hideSaveProgressAction: () => dispatch(videoActions.hideSaveProgressAction()),
+  showDeleteProgressAction: () => dispatch(videoActions.showDeleteProgressAction()),
+  hideDeleteProgressAction: () => dispatch(videoActions.hideDeleteProgressAction()),
+  saveCompleteAction: (complete) => dispatch(videoActions.saveCompleteAction(complete)),
+  deleteCompleteAction: (complete) => dispatch(videoActions.deleteCompleteAction(complete)),
+  deleteConfirmationAction: (confirmation) => dispatch(videoActions.deleteConfirmationAction(confirmation)),
+  updateVideoAction: (video) => dispatch(videoActions.updateVideoAction(video)),
+  setVideoInputAction: (key, value) => dispatch(videoActions.setVideoInputAction(key, value)),
+  setFieldValidAction: (field, valid) => dispatch(videoActions.setFieldValidAction(field, valid)),
+  setFieldChangedAction: (field, changed) => dispatch(videoActions.setFieldChangedAction(field, changed)),
+  setFormErrorsAction: (formErrors) => dispatch(videoActions.setFormErrorsAction(formErrors)),
+  setFormValidAction: (valid) => dispatch(videoActions.setFormValidAction(valid))
+});
+export default withRouter(connect(mapStateToProps, mapDispatchToProps)(withStyles(styles)(Video)));

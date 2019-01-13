@@ -9,6 +9,8 @@ import MenuIcon from '@material-ui/icons/Menu';
 import Button from '@material-ui/core/Button';
 import Avatar from '@material-ui/core/Avatar';
 import { Link } from "react-router-dom";
+import { connect } from 'react-redux';
+import { toggleDrawerAction } from '../../actions/displayActions'
 
 const styles = theme => ({
   root: {
@@ -37,6 +39,10 @@ class MyAppBar extends React.Component {
     this.props.setCurrentUser(null);
   }
 
+  toggleDrawerAction = (event) => {
+    this.props.toggleDrawerAction();
+  }
+
   render() {
     const { classes } = this.props;
     return (
@@ -44,7 +50,7 @@ class MyAppBar extends React.Component {
         <AppBar position="static">
           <Toolbar>
             <IconButton className={classes.menuButton} color="inherit" aria-label="Menu"
-              onClick={this.props.toggleDrawer}>
+              onClick={this.toggleDrawerAction}>
               <MenuIcon />
             </IconButton>
             <Typography variant="h6" color="inherit" className={classes.flex} component={Link} to={this.props.currentUser ? '/private/dashboard' : '/'}>
@@ -58,7 +64,9 @@ class MyAppBar extends React.Component {
                 <Button size="large" onClick={this.logout} color="inherit" className={classes.loginButton}>Logout</Button>
               </div>
             ) : (
-              <Button size="large" color="inherit" component={Link} to="/login" className={classes.loginButton}>Login</Button>
+              <Link to="/login">
+                <Button size="large" color="inherit" className={classes.loginButton}>Login</Button>
+              </Link>
             )}
           </Toolbar>
         </AppBar>
@@ -71,4 +79,10 @@ MyAppBar.propTypes = {
   classes: PropTypes.object.isRequired,
 };
 
-export default withStyles(styles)(MyAppBar);
+const mapStateToProps = state => ({
+  currentUser: state.user.user
+});
+const mapDispatchToProps = dispatch => ({
+  toggleDrawerAction: () => dispatch(toggleDrawerAction())
+});
+export default connect(mapStateToProps, mapDispatchToProps)(withStyles(styles)(MyAppBar));

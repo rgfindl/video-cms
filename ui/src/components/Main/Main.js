@@ -9,6 +9,7 @@ import About from "./About/About";
 import Login from "./Login/Login";
 import Dashboard from "./Dashboard/Dashboard";
 import Video from "./Video/Video";
+import { connect } from 'react-redux';
 
 const styles = theme => ({
   root: {
@@ -26,6 +27,10 @@ class Main extends React.Component {
       prevProps.location.pathname !== this.props.location.pathname;
   }
 
+  componentDidMount = async () => {
+    console.log('Main didMount');
+  }
+
   render() {
     const { classes } = this.props;
     return (
@@ -33,16 +38,14 @@ class Main extends React.Component {
         <Switch>
           <Route exact path="/" component={Home}/>
           <Route exact path="/about" component={About}/>
-          <Route exact path="/login" component={()=><Login currentUser={this.props.currentUser} setCurrentUser={this.props.setCurrentUser}/>}/>
+          <Route exact path="/login" component={()=><Login setCurrentUser={this.props.setCurrentUser}/>}/>
           <PrivateRoute exact path="/private/dashboard" component={()=>
             <Dashboard 
-              currentUser={this.props.currentUser} 
               setCurrentUser={this.props.setCurrentUser}
             />
           } currentUser={this.props.currentUser}/>
           <PrivateRoute exact path="/private/videos/:id?" component={()=>
             <Video
-              currentUser={this.props.currentUser} 
               setCurrentUser={this.props.setCurrentUser}
             />
           } currentUser={this.props.currentUser}/>
@@ -57,4 +60,10 @@ Main.propTypes = {
   classes: PropTypes.object.isRequired,
 };
 
-export default withStyles(styles)(withRouter(Main));
+const mapStateToProps = state => ({
+  currentUser: state.user.user,
+  drawerOpen: state.display.drawerOpen
+});
+const mapDispatchToProps = dispatch => ({
+});
+export default withRouter(connect(mapStateToProps, mapDispatchToProps)(withStyles(styles)(Main)));

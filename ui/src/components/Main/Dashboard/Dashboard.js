@@ -5,10 +5,12 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 import Typography from '@material-ui/core/Typography';
 import { Link } from "react-router-dom";
 import Button from '@material-ui/core/Button';
-import * as api from '../../lib/api';
+import * as api from '../../../lib/api';
 import AlertDialog from '../../Utils/AlertDialog/AlertDialog.js';
-import Paper from '@material-ui/core/Paper';
 import Grid from '@material-ui/core/Grid';
+import { connect } from 'react-redux';
+import { showProgressAction, hideProgressAction, showAlertAction, hideAlertAction } from '../../../actions/displayActions';
+import { setVideosAction } from '../../../actions/videosActions';
 
 const styles = {
   root: {
@@ -27,42 +29,35 @@ class Dashboard extends React.Component {
   _isMounted = false;
   constructor(props) {
     super(props);
-    this.state = {
-      _inProgress: false,
-      _alertOpen: false,
-      videos: null
-    };
+    this.props.setVideosAction(null);
   }
 
   fetchVideos = async () => {
     try {
-      this.setState({_inProgress: true});
+      this.props.showProgressAction();
       const response = await api.fetchVideos();
       if (this._isMounted) {
-        this.setState({
-          _inProgress: false,
-          videos: response.videos
-        });
+        this.props.hideProgressAction();
+        this.props.setVideosAction(response.videos);
       }
       return;
     } catch (error) {
       if (this._isMounted) {
-        this.setState({
-          _inProgress: false,
-          _error: error.message,
-          _alertOpen: true
-        });
+        this.props.hideProgressAction();
+        this.props.showAlertAction(error.message);
       }
       return;
     }
   }
    
   onDialogClose = () => {
-    this.setState({_alertOpen: false});
+    this.props.hideAlertAction();
   }
 
   componentDidMount = async () => {
+    console.log('Dashboard didMount');
     this._isMounted = true;
+    this.props.hideProgressAction();
     await this.fetchVideos();
   }
   
@@ -81,19 +76,19 @@ class Dashboard extends React.Component {
           <Grid item className={classes.newButtonGrid} xs={6}>
             <Button variant="contained" color="inherit" component={Link} to='/private/videos' className={classes.videoButton}>New Video</Button>
           </Grid>
-          {this.state._inProgress &&
+          {this.props.display.inProgress &&
             <Grid item xs={12}>
               <CircularProgress className={classes.progress} size={25} />
             </Grid>
           }
         </Grid>
-        {this.state.videos && !this.state._inProgress && this.props.currentUser &&
+        {this.props.videos && !this.props.display.inProgress && this.props.currentUser &&
           <Grid container spacing={24}>
-            {this.state.videos.map(item => 
+            {this.props.videos.map(item => 
               <Grid item sm={4} key={item.id}>
                 {item.thumbnail &&
                   <Button color="inherit" component={Link} to={`/private/videos/${item.id}`} className={classes.videoButton}>
-                    <img src={item.thumbnail} className={classes.videoImg}/>
+                    <img alt='' src={item.thumbnail} className={classes.videoImg}/>
                   </Button>
                 }
                 {!item.thumbnail &&
@@ -109,9 +104,9 @@ class Dashboard extends React.Component {
           </Grid>
         }
         <AlertDialog
-          open={this.state._alertOpen} 
+          open={this.props.display.alertOpen} 
           title='Request failed'
-          description={this.state._error ? this.state._error : 'Login failed, please try again.'}
+          description={this.props.display.error ? this.props.display.error : 'Login failed, please try again.'}
           handlePositive={this.onDialogClose}
           handleClose={this.onDialogClose}
           positiveButton='Close'
@@ -125,4 +120,16 @@ Dashboard.propTypes = {
   classes: PropTypes.object.isRequired,
 };
 
-export default withStyles(styles)(Dashboard);
+const mapStateToProps = state => ({
+  currentUser: state.user.user,
+  display: state.display,
+  videos: state.videos.videos
+});
+const mapDispatchToProps = dispatch => ({
+  showProgressAction: () => dispatch(showProgressAction()),
+  hideProgressAction: () => dispatch(hideProgressAction()),
+  showAlertAction: (error) => dispatch(showAlertAction(error)),
+  hideAlertAction: () => dispatch(hideAlertAction()),
+  setVideosAction: (videos) => dispatch(setVideosAction(videos))
+});
+export default connect(mapStateToProps, mapDispatchToProps)(withStyles(styles)(Dashboard));

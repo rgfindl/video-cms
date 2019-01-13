@@ -7,6 +7,7 @@ import {Link} from "react-router-dom";
 import Button from '@material-ui/core/Button';
 import Paper from '@material-ui/core/Paper';
 import logo from '../../../resources/images/logo/logo-AppStore.png'
+import { connect } from 'react-redux';
 
 const styles = theme => ({
   root: {
@@ -98,4 +99,11 @@ Home.propTypes = {
   classes: PropTypes.object.isRequired,
 };
 
-export default withStyles(styles)(Home);
+
+
+const mapStateToProps = state => ({
+  ...state
+});
+const mapDispatchToProps = dispatch => ({
+});
+export default connect(mapStateToProps, mapDispatchToProps)(withStyles(styles)(Home));

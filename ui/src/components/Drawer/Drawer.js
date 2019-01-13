@@ -12,6 +12,8 @@ import HelpIcon from '@material-ui/icons/Help';
 import VideoLibraryIcon from '@material-ui/icons/VideoLibrary';
 import VideoCallIcon from '@material-ui/icons/VideoCall';
 import { Link } from "react-router-dom";
+import { connect } from 'react-redux';
+import { toggleDrawerAction } from '../../actions/displayActions';
 
 const styles = {
   root: {
@@ -27,21 +29,25 @@ const styles = {
 
 class MyDrawer extends React.Component {
 
+  toggleDrawerAction = (event) => {
+    this.props.toggleDrawerAction();
+  }
+
   render() {
     const { classes } = this.props;
 
     return (
       <div className={classes.root}>
         <SwipeableDrawer
-          open={this.props.open}
-          onClose={this.props.closeDrawer}
-          onOpen={this.props.openDrawer}
+          open={this.props.drawerOpen}
+          onClose={this.toggleDrawerAction}
+          onOpen={this.toggleDrawerAction}
         >
           <div
             tabIndex={0}
             role="button"
-            onClick={this.props.closeDrawer}
-            onKeyDown={this.props.closeDrawer}
+            onClick={this.toggleDrawerAction}
+            onKeyDown={this.toggleDrawerAction}
           >
             <div className={classes.list}>
               <List>
@@ -82,10 +88,14 @@ class MyDrawer extends React.Component {
 }
 
 MyDrawer.propTypes = {
-  classes: PropTypes.object.isRequired,
-  open: PropTypes.bool.isRequired,
-  closeDrawer: PropTypes.func.isRequired,
-  openDrawer: PropTypes.func.isRequired,
+  classes: PropTypes.object.isRequired
 };
 
-export default withStyles(styles)(MyDrawer);
+const mapStateToProps = state => ({
+  currentUser: state.user.user,
+  drawerOpen: state.display.drawerOpen
+});
+const mapDispatchToProps = dispatch => ({
+  toggleDrawerAction: () => dispatch(toggleDrawerAction())
+});
+export default connect(mapStateToProps, mapDispatchToProps)(withStyles(styles)(MyDrawer));

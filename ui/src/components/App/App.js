@@ -7,7 +7,9 @@ import Footer from'../Footer/Footer'
 import {omit, isEqual} from 'lodash';
 import blue from '@material-ui/core/colors/blue';
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
-import * as api from '../lib/api';
+import * as api from '../../lib/api';
+import { connect } from 'react-redux';
+import { setUserAction } from '../../actions/userActions';
 
 const theme = createMuiTheme({
   typography: {
@@ -21,30 +23,15 @@ const theme = createMuiTheme({
 class App extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
-      _drawerOpen: false,
-      currentUser: sessionStorage.getItem('currentUser') ? JSON.parse(sessionStorage.getItem('currentUser')) : null
-    };
+    this.props.setUserAction(sessionStorage.getItem('currentUser') ? JSON.parse(sessionStorage.getItem('currentUser')) : null);
     api.init(process.env.REACT_APP_API_HOST, this.setCurrentUser);
   }
 
-  closeDrawer = () => {
-    this.setState({_drawerOpen: false});
-  };
-
-  openDrawer = () => {
-    this.setState({_drawerOpen: true});
-  };
-
-  toggleDrawer = () => {
-    this.setState((prevState) => {
-      return {_drawerOpen: !prevState._drawerOpen}
-    });
-  };
-
   setCurrentUser = (currentUser) => {
-    if (isEqual(this.state.currentUser, currentUser)) return;
-    this.setState({ currentUser: currentUser ? omit(currentUser, 'token') : currentUser });
+    console.log('onSuccess');
+    if (isEqual(this.props.currentUser, currentUser)) return;
+    console.log('onSuccess2');
+    this.props.setUserAction(currentUser ? omit(currentUser, 'token') : currentUser);
     if (currentUser) {
       sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
       sessionStorage.setItem('currentUserToken', currentUser.token);
@@ -54,27 +41,23 @@ class App extends React.Component {
     }
   }
 
+  componentDidMount = async () => {
+    console.log('App didMount');
+  }
+
   render() {
     return (
       <MuiThemeProvider theme={theme}>
         <Router>
           <div>
-            <AppBar 
-              toggleDrawer={this.toggleDrawer}
-              currentUser={this.state.currentUser}
+            <AppBar
               setCurrentUser={this.setCurrentUser}
             />
             <Drawer
-              open={this.state._drawerOpen}
-              closeDrawer={this.closeDrawer}
-              openDrawer={this.openDrawer}
-              currentUser={this.state.currentUser}
               setCurrentUser={this.setCurrentUser} 
             />
             <Main
-              currentUser={this.state.currentUser}
               setCurrentUser={this.setCurrentUser}
-              drawerOpen={this.state._drawerOpen}
             />
             <Footer/>
           </div>
@@ -84,4 +67,10 @@ class App extends React.Component {
   }
 }
 
-export default App;
+const mapStateToProps = state => ({
+  currentUser: state.user.user
+});
+const mapDispatchToProps = dispatch => ({
+  setUserAction: (user) => dispatch(setUserAction(user))
+});
+export default connect(mapStateToProps, mapDispatchToProps)(App);
