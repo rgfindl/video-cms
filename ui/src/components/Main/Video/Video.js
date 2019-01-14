@@ -326,7 +326,7 @@ class Video extends React.Component {
                   }
                   {!this.props.display.inProgress &&
                     <div>
-                      {this.props.videoForm.video.status &&
+                      {this.props.videoForm.video && this.props.videoForm.video.status &&
                         <Typography variant="body1" gutterBottom={true} color="secondary">
                           Status: <span className={classes.status}>{this.props.videoForm.video.status}</span>
                         </Typography>
