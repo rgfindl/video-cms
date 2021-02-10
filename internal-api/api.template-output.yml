@@ -181,7 +181,7 @@ Resources:
     Type: AWS::Route53::RecordSetGroup
   LambdaFunction:
     Properties:
-      CodeUri: s3://heyblue-stack-artifacts/d3b5978207580f0d21660fbd4c89bb8c
+      CodeUri: s3://heyblue-stack-artifacts/c6c790c35541379d3a912cd3034eb9b4
       Environment:
         Variables:
           AssetsBucket:

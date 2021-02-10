@@ -28,7 +28,7 @@ Parameters:
 Resources:
   LambdaFunction:
     Properties:
-      CodeUri: s3://heyblue-stack-artifacts/490604b986df149300607edcaa674cff
+      CodeUri: s3://heyblue-stack-artifacts/76057435c105c85129cc04474b59966e
       Environment:
         Variables:
           AssetsBucket:

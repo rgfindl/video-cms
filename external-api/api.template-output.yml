@@ -107,7 +107,7 @@ Resources:
             - Origin
             - Access-Control-Request-Headers
             - Access-Control-Request-Method
-            QueryString: 'false'
+            QueryString: 'true'
           MaxTTL: 31536000
           MinTTL: 0
           TargetOriginId: ApiGatewayApi
@@ -223,7 +223,7 @@ Resources:
     Type: AWS::Route53::RecordSetGroup
   LambdaFunction:
     Properties:
-      CodeUri: s3://heyblue-stack-artifacts/44b272f89d106bb8cd7842b488be4dc4
+      CodeUri: s3://heyblue-stack-artifacts/b6246772e50e94b45a4725730c0ad87c
       Environment:
         Variables:
           AssetsBucket:

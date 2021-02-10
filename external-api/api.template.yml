@@ -180,7 +180,7 @@ Resources:
             - OPTIONS
           TargetOriginId: 'ApiGatewayApi'
           ForwardedValues:
-            QueryString: 'false'
+            QueryString: 'true'
             Cookies:
               Forward: none
             Headers:

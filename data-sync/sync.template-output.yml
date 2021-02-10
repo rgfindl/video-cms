@@ -20,7 +20,7 @@ Parameters:
 Resources:
   LambdaFunction:
     Properties:
-      CodeUri: s3://heyblue-stack-artifacts/386a02e9f47a59ab1ad6cb20039462c4
+      CodeUri: s3://heyblue-stack-artifacts/8637f2f98d61bfaca301285ef257e05d
       Environment:
         Variables:
           ES_ENDPOINT:
