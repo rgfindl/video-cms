@@ -8,7 +8,7 @@
     "test": "mocha"
   },
   "dependencies": {
-    "lodash": "^4.17.10"
+    "lodash": "^4.17.21"
   },
   "devDependencies": {
     "aws-sdk": "^2.239.1",
