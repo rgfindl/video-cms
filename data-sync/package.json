@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "dynamodb-stream-elasticsearch": "^2.2.1",
-    "lodash": "^4.17.10"
+    "lodash": "^4.17.21"
   },
   "devDependencies": {
     "aws-sdk": "^2.239.1",
