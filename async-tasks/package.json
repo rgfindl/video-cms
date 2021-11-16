@@ -10,7 +10,7 @@
     "lodash": "^4.17.10"
   },
   "devDependencies": {
-    "aws-sdk": "^2.239.1",
+    "aws-sdk": "^2.814.0",
     "eslint": "^4.19.1",
     "eslint-config-airbnb-base": "^12.1.0",
     "eslint-plugin-import": "^2.11.0",
